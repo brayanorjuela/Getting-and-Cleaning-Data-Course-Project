@@ -1,0 +1,149 @@
+---
+title: "CodeBook"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Loading Packages and Getting Data
+
+Initially I proceed to download the tidyverse package that contains within itself multiple very
+useful packages for this project, including packages needed for this project
+
+```{r}
+
+library(tidyverse)
+
+```
+
+After having downloaded and unzipped the folder with the information provided in this project, I
+proceed to make the downloads folder my current directory and to read herein the files needed for my final data set. Also, I assign meaningful names to the variables present in the previously mentioned files 
+
+```{r}
+
+setwd("C:/Users/Brayan/Downloads")
+
+Features <- read.table("getdata_projectfiles_UCI HAR Dataset/UCI HAR Dataset/features.txt")
+names(Features) <- c("Number", "Feature_Capability")
+Activity_Labels <- read.table("getdata_projectfiles_UCI HAR Dataset/UCI HAR Dataset/activity_labels.txt")
+names(Activity_Labels) <- c("Key_Number","Label")
+
+Subject_Train <- read.table("getdata_projectfiles_UCI HAR Dataset/UCI HAR Dataset/train/subject_train.txt")
+names(Subject_Train) <- c("Subject_Number")
+X_Train <- read.table("getdata_projectfiles_UCI HAR Dataset/UCI HAR Dataset/train/X_train.txt")
+names(X_Train) <- Features$Feature_Capability
+Y_Train <- read.table("getdata_projectfiles_UCI HAR Dataset/UCI HAR Dataset/train/y_train.txt")
+names(Y_Train) <- c("Key_Number")
+
+Subject_Test <- read.table("getdata_projectfiles_UCI HAR Dataset/UCI HAR Dataset/test/subject_test.txt")
+names(Subject_Test) <- c("Subject_Number")
+X_Test <- read.table("getdata_projectfiles_UCI HAR Dataset/UCI HAR Dataset/test/X_test.txt")
+names(X_Test) <- Features$Feature_Capability
+Y_Test <- read.table("getdata_projectfiles_UCI HAR Dataset/UCI HAR Dataset/test/y_test.txt")
+names(Y_Test) <- c("Key_Number")
+
+```
+
+
+## Creation of the Final Data Set
+
+According to the instructions provided in the project, the final data set is created in the following manner to
+fulfill all the specifications
+
+# 1. Merging
+
+The training and test sets are merged to create one data set. The loaded files that convey meaningful information were merged into a data frame   
+
+```{r}
+
+Merged_Sets <- data.frame(Subject=rbind(Subject_Train,Subject_Test), y=rbind(Y_Train,Y_Test), x=rbind(X_Train,X_Test))
+
+```
+
+# 2. Selecting
+
+The measurements on the mean and standard deviation for each measurement are extracted. This is performed by
+checking a certain pattern on the names of the data frame with the merged sets and then selecting those variables that match the pattern.
+
+```{r}
+
+Subject_Col <- grepl("Subject",names(Merged_Sets))
+Key_Number_Col <- grepl("Key_Number",names(Merged_Sets))
+Mean_Col <- grepl("mean",names(Merged_Sets))
+Std_Col <- grepl("std",names(Merged_Sets))
+Columns_to_select <- as.logical(Subject_Col + Key_Number_Col + Mean_Col + Std_Col)
+
+Selected_Variables <- Merged_Sets[,Columns_to_select]
+
+```
+
+# 3. Naming Activities
+
+The activities in the data set are named using descriptive activity names. By matching the key numbers with
+the labels given in the activity labels file, one can appropriately assign the descriptive activity names to the corresponding variable containing the key numbers. 
+
+```{r}
+
+Selected_Variables$Key_Number <- as.character(Selected_Variables$Key_Number) 
+Selected_Variables$Key_Number <- gsub("1", Activity_Labels[1,2],Selected_Variables$Key_Number) 
+Selected_Variables$Key_Number <- gsub("2", Activity_Labels[2,2],Selected_Variables$Key_Number)  
+Selected_Variables$Key_Number <- gsub("3", Activity_Labels[3,2],Selected_Variables$Key_Number)  
+Selected_Variables$Key_Number <- gsub("4", Activity_Labels[4,2],Selected_Variables$Key_Number)  
+Selected_Variables$Key_Number <- gsub("5", Activity_Labels[5,2],Selected_Variables$Key_Number)  
+Selected_Variables$Key_Number <- gsub("6", Activity_Labels[6,2],Selected_Variables$Key_Number)
+
+```
+
+# 4. Labeling Variables
+
+The data set is appropriately labeled with descriptive variable names. Based on the description of the abbreviations of the features found in the features_info file, the name of the variables in the data set are appropriately labeled. In this file, it is found that Acc denotes accelerometer, Gyro denotes Gyroscope, t denotes time, Mag denotes Magnitude, f denotes Frequency, mean() denotes Mean Value and std() denotes Standard Deviation, among others.    
+
+```{r}
+
+names(Selected_Variables) <- gsub("^x.","", names(Selected_Variables))
+names(Selected_Variables) <- gsub("Acc","Accelerometer", names(Selected_Variables))
+names(Selected_Variables) <- gsub("Gyro","Gyroscope", names(Selected_Variables))
+names(Selected_Variables) <- gsub("^t","Time", names(Selected_Variables))
+names(Selected_Variables) <- gsub("Mag","Magnitude", names(Selected_Variables))
+names(Selected_Variables) <- gsub("^f","Frequency", names(Selected_Variables))
+names(Selected_Variables) <- gsub("mean..","Mean", names(Selected_Variables))
+names(Selected_Variables) <- gsub("std..","Standard_Deviation", names(Selected_Variables))
+names(Selected_Variables) <- gsub("Key_Number","Activity", names(Selected_Variables))
+names(Selected_Variables) <- gsub("Meaneq..", "MeanFreq", names(Selected_Variables))
+# following line is to fix up an error to replace unwished repetition of word Body in some of the variable names
+names(Selected_Variables) <- gsub("BodyBody","Body", names(Selected_Variables))
+
+First_Data_Set <- Selected_Variables
+
+```
+
+# 5. Creating new Data Set 
+
+A new data set is created with the average of each variable for each activity and each subject. This is done by grouping the data set with respect with the variables activity and subject. After this, one could use a summarize function to find the wanted average of each variable. 
+
+```{r}
+
+Data_Set_to_be_submitted <- First_Data_Set %>%
+  group_by(Activity, Subject_Number) %>%
+  summarise_all(mean)
+
+```
+
+A glimpse at the final tidy data set is given through the str function 
+
+```{r}
+
+str(Data_Set_to_be_submitted)
+
+```
+
+Creating final tidy data set as a text file 
+
+```{r}
+
+write.table(Data_Set_to_be_submitted,"Data_set_to_be_submitted.txt")
+
+
+```
