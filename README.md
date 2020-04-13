@@ -7,4 +7,9 @@ project. The second script is an .md file that contains the full description of 
 Furthermore, it explains how the code fulfills the specifications given in the project, as well as it explains everything needed in order
 to understand how the data is cleaned and organized.
 
-It is very important to note that the scripts are going to be run under the assumption that the folder with the raw data, which was provided in this project, is to be downloaded and unzipped in the working directory exactly from the link that was given. Therefore, in order to manipulate the files in the downloaded folder, the used file paths to read the data assume the creation of the two folders where the files with the samsung data are contained when the link provided for this project is used. 
+It is very important to note that the scripts are going to be run under the assumption that the folder with the raw data, which was 
+provided in this project, is to be downloaded and unzipped in the working directory exactly from the link that was given. Therefore, in 
+order to manipulate the files in the downloaded folder, the used file paths to read the data assume the existence of the two folders where 
+the files with the samsung data are contained when the link provided for this project is used. This is explained more in detail in the code 
+book once one see the accordance of the file paths of the reading functions (read.table) and the creation of an additional folder when
+one downloads the files from the link provided. 
